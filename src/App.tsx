@@ -30,7 +30,7 @@ export default function App() {
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
-    setActiveTab('dashboard');
+    setActiveTab(user.jabatan === 'ADMIN' ? 'dashboard' : 'absensi');
     setRefreshKey((k) => k + 1);
   };
 
@@ -43,6 +43,7 @@ export default function App() {
   const handleSwitchUser = (user: User) => {
     storage.setCurrentUser(user);
     setCurrentUser(user);
+    setActiveTab(user.jabatan === 'ADMIN' ? 'dashboard' : 'absensi');
     setRefreshKey((k) => k + 1);
   };
 

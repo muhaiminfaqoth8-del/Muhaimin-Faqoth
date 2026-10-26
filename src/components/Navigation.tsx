@@ -43,46 +43,58 @@ export const Navigation: React.FC<NavigationProps> = ({
     badge?: string;
   }
 
-  const navItems: NavItem[] = [
-    {
-      id: 'dashboard',
-      label: isAdmin ? 'Dashboard Admin' : 'Dashboard Petugas',
-      icon: LayoutDashboard,
-    },
-    {
-      id: 'absensi',
-      label: 'Absensi',
-      icon: Clock,
-    },
-    {
-      id: 'jadwal',
-      label: 'Jadwal Kerja',
-      icon: CalendarDays,
-    },
-    {
-      id: 'petugas',
-      label: 'Data Petugas',
-      icon: Users,
-      adminOnly: true,
-    },
-    {
-      id: 'riwayat',
-      label: 'Riwayat Absensi',
-      icon: History,
-    },
-    {
-      id: 'laporan',
-      label: 'Laporan',
-      icon: FileSpreadsheet,
-    },
-    {
-      id: 'pengaturan',
-      label: 'Pengaturan',
-      icon: Settings,
-    },
-  ];
+  const navItems: NavItem[] = isAdmin
+    ? [
+        {
+          id: 'dashboard',
+          label: 'Dashboard Admin',
+          icon: LayoutDashboard,
+        },
+        {
+          id: 'petugas',
+          label: 'Data Petugas',
+          icon: Users,
+        },
+        {
+          id: 'jadwal',
+          label: 'Jadwal Kerja',
+          icon: CalendarDays,
+        },
+        {
+          id: 'riwayat',
+          label: 'Riwayat Absensi',
+          icon: History,
+        },
+        {
+          id: 'laporan',
+          label: 'Laporan Excel',
+          icon: FileSpreadsheet,
+        },
+        {
+          id: 'pengaturan',
+          label: 'Pengaturan & GPS',
+          icon: Settings,
+        },
+      ]
+    : [
+        {
+          id: 'absensi',
+          label: 'Presensi Kehadiran',
+          icon: Clock,
+        },
+        {
+          id: 'jadwal',
+          label: 'Jadwal Tugas Saya',
+          icon: CalendarDays,
+        },
+        {
+          id: 'riwayat',
+          label: 'Riwayat Presensi Saya',
+          icon: History,
+        },
+      ];
 
-  const visibleItems = navItems.filter((item) => !item.adminOnly || isAdmin);
+  const visibleItems = navItems;
 
   return (
     <nav className="bg-white/80 backdrop-blur-sm border-b border-emerald-900/[0.06] shadow-2xs">

@@ -338,7 +338,7 @@ class StorageService {
   }
 
   /**
-   * Absen Masuk
+   * Absen Masuk (dengan validasi radius geofence & biometrik)
    */
   recordCheckIn(
     user: User,
@@ -347,8 +347,24 @@ class StorageService {
       keterangan?: string;
       suhuTubuh?: string;
       lokasi?: string;
+      metodeVerifikasi?: import('../types').BiometricMethod;
+      fotoWajah?: string;
+      koordinatGPS?: { latitude: number; longitude: number };
+      jarakKeKlinikMeter?: number;
+      statusLokasi?: 'DALAM_KLINIK' | 'LUAR_KLINIK';
     }
   ): { success: boolean; message: string; record?: AttendanceRecord } {
+    const profile = this.getClinicProfile();
+    const maxRadius = profile.radiusMeter || 250;
+
+    // Enforce geofencing: petugas MUST be inside the clinic boundary
+    if (options?.statusLokasi === 'LUAR_KLINIK' || (options?.jarakKeKlinikMeter !== undefined && options.jarakKeKlinikMeter > maxRadius)) {
+      return {
+        success: false,
+        message: `Absensi Ditolak: Anda terdeteksi berada di luar area Klinik Sidogiri (Jarak: ${options.jarakKeKlinikMeter} m, batas: ${maxRadius} m). Absensi hanya dapat dilakukan di lingkungan fisik Klinik Sidogiri.`,
+      };
+    }
+
     const check = this.canCheckIn(user.id);
     if (!check.can) {
       return { success: false, message: check.reason || 'Tidak dapat absen masuk.' };
@@ -387,8 +403,13 @@ class StorageService {
       shift: shift,
       keterangan: options?.keterangan || (status === 'TERLAMBAT' ? 'Hadir terlambat' : 'Absen tepat waktu'),
       suhuTubuh: options?.suhuTubuh || '36.5°C',
-      lokasi: options?.lokasi || 'Klinik Sidogiri',
+      lokasi: options?.lokasi || 'Klinik Sidogiri Induk',
       timestampMasuk: now.getTime(),
+      metodeVerifikasi: options?.metodeVerifikasi || 'WAJAH',
+      fotoWajah: options?.fotoWajah,
+      koordinatGPS: options?.koordinatGPS,
+      jarakKeKlinikMeter: options?.jarakKeKlinikMeter,
+      statusLokasi: options?.statusLokasi || 'DALAM_KLINIK',
     };
 
     const records = this.getAttendance();
@@ -397,18 +418,36 @@ class StorageService {
 
     return {
       success: true,
-      message: `Absen Masuk berhasil dicatat pada ${timeStr} WIB dengan status: ${status}.`,
+      message: `Absen Masuk (${options?.metodeVerifikasi === 'SIDIK_JARI' ? 'Sidik Jari' : 'Scan Wajah'}) berhasil dicatat pukul ${timeStr} WIB. Status: ${status}.`,
       record: newRecord,
     };
   }
 
   /**
-   * Absen Pulang
+   * Absen Pulang (dengan validasi radius geofence & biometrik)
    */
   recordCheckOut(
     userId: string,
-    keterangan?: string
+    keterangan?: string,
+    options?: {
+      metodeVerifikasi?: import('../types').BiometricMethod;
+      fotoWajah?: string;
+      koordinatGPS?: { latitude: number; longitude: number };
+      jarakKeKlinikMeter?: number;
+      statusLokasi?: 'DALAM_KLINIK' | 'LUAR_KLINIK';
+    }
   ): { success: boolean; message: string; record?: AttendanceRecord } {
+    const profile = this.getClinicProfile();
+    const maxRadius = profile.radiusMeter || 250;
+
+    // Enforce geofencing for checkout as well
+    if (options?.statusLokasi === 'LUAR_KLINIK' || (options?.jarakKeKlinikMeter !== undefined && options.jarakKeKlinikMeter > maxRadius)) {
+      return {
+        success: false,
+        message: `Absen Pulang Ditolak: Anda berada di luar area Klinik Sidogiri (Jarak: ${options.jarakKeKlinikMeter} m, batas: ${maxRadius} m). Silakan lakukan absensi di lokasi klinik.`,
+      };
+    }
+
     const check = this.canCheckOut(userId);
     if (!check.can) {
       return { success: false, message: check.reason || 'Tidak dapat absen pulang.' };
@@ -431,6 +470,10 @@ class StorageService {
         ? `${records[index].keterangan || ''} | Pulang: ${keterangan}`
         : records[index].keterangan,
       timestampPulang: Date.now(),
+      metodeVerifikasi: options?.metodeVerifikasi || records[index].metodeVerifikasi,
+      fotoWajah: options?.fotoWajah || records[index].fotoWajah,
+      jarakKeKlinikMeter: options?.jarakKeKlinikMeter ?? records[index].jarakKeKlinikMeter,
+      statusLokasi: options?.statusLokasi || records[index].statusLokasi,
     };
 
     this.saveAttendance(records);

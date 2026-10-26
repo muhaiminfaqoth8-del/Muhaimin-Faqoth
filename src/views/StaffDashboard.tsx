@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { User, AttendanceRecord, ShiftType, WorkSchedule } from '../types';
+import { User, AttendanceRecord, ShiftType, WorkSchedule, BiometricMethod } from '../types';
 import { storage, getTodayDateString, getDayNameIndonesian } from '../services/storage';
+import { GeofenceResult } from '../services/geolocation';
 import { DigitalClock } from '../components/DigitalClock';
 import { StatusBadge } from '../components/StatusBadge';
 import { EditAttendanceModal } from '../components/EditAttendanceModal';
+import { FaceScanModal } from '../components/FaceScanModal';
+import { FingerprintModal } from '../components/FingerprintModal';
+import { GeofenceStatusBadge } from '../components/GeofenceStatusBadge';
 import {
   LogIn,
   LogOut,
@@ -21,6 +25,10 @@ import {
   ChevronRight,
   Edit2,
   X,
+  Scan,
+  Fingerprint,
+  MapPin,
+  Camera,
 } from 'lucide-react';
 
 interface StaffDashboardProps {
@@ -41,12 +49,19 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   const [suhuTubuh, setSuhuTubuh] = useState<string>('36.5');
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
+  // Biometric & Geofencing State
+  const [geofenceResult, setGeofenceResult] = useState<GeofenceResult | null>(null);
+  const [preferredBiometric, setPreferredBiometric] = useState<BiometricMethod>('WAJAH');
+  const [showFaceModal, setShowFaceModal] = useState<boolean>(false);
+  const [showFingerprintModal, setShowFingerprintModal] = useState<boolean>(false);
+  const [pendingAction, setPendingAction] = useState<'MASUK' | 'PULANG' | null>(null);
+
   // Leave Modal state
   const [showLeaveModal, setShowLeaveModal] = useState<boolean>(false);
   const [leaveType, setLeaveType] = useState<'IZIN' | 'SAKIT'>('IZIN');
   const [leaveReason, setLeaveReason] = useState<string>('');
 
-  // Edit Attendance Modal state
+  // Edit Attendance Modal state (for correcting duty/attendance if permitted)
   const [showEditAttendanceModal, setShowEditAttendanceModal] = useState<boolean>(false);
 
   // Edit Schedule / Duty Modal state
@@ -122,35 +137,144 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   // Validation checks for buttons
   const checkInCheck = storage.canCheckIn(currentUser.id);
   const checkOutCheck = storage.canCheckOut(currentUser.id);
+  const isInsideClinic = geofenceResult?.isInside ?? true;
 
-  const handleAbsenMasuk = () => {
+  // Trigger check-in flow with Geofence & Biometric verification
+  const handleInitiateAbsenMasuk = () => {
     setAlertMessage(null);
-    const res = storage.recordCheckIn(currentUser, {
-      shift: selectedShift,
-      keterangan: keterangan.trim() || undefined,
-      suhuTubuh: `${suhuTubuh}°C`,
-    });
 
-    if (res.success) {
-      setAlertMessage({ type: 'success', text: res.message });
-      loadData();
-      if (onRefreshData) onRefreshData();
+    // Rule: Petugas MUST be within Klinik Sidogiri radius
+    if (geofenceResult && !geofenceResult.isInside) {
+      setAlertMessage({
+        type: 'error',
+        text: `Absensi Ditolak: Anda terdeteksi berada di luar area Klinik Sidogiri (Jarak: ${geofenceResult.distanceMeter}m, batas: ${geofenceResult.maxRadiusMeter}m). Kehadiran wajib dilakukan di klinik.`,
+      });
+      return;
+    }
+
+    if (!checkInCheck.can) {
+      setAlertMessage({ type: 'error', text: checkInCheck.reason || 'Tidak dapat absen masuk.' });
+      return;
+    }
+
+    setPendingAction('MASUK');
+    if (preferredBiometric === 'WAJAH') {
+      setShowFaceModal(true);
     } else {
-      setAlertMessage({ type: 'error', text: res.message });
+      setShowFingerprintModal(true);
     }
   };
 
-  const handleAbsenPulang = () => {
+  // Trigger check-out flow with Geofence & Biometric verification
+  const handleInitiateAbsenPulang = () => {
     setAlertMessage(null);
-    const res = storage.recordCheckOut(currentUser.id, keterangan.trim() || undefined);
 
-    if (res.success) {
-      setAlertMessage({ type: 'success', text: res.message });
-      loadData();
-      if (onRefreshData) onRefreshData();
-    } else {
-      setAlertMessage({ type: 'error', text: res.message });
+    // Rule: Petugas MUST be within Klinik Sidogiri radius
+    if (geofenceResult && !geofenceResult.isInside) {
+      setAlertMessage({
+        type: 'error',
+        text: `Absen Pulang Ditolak: Anda terdeteksi berada di luar area Klinik Sidogiri (Jarak: ${geofenceResult.distanceMeter}m, batas: ${geofenceResult.maxRadiusMeter}m). Presensi pulang wajib dilakukan di klinik.`,
+      });
+      return;
     }
+
+    if (!checkOutCheck.can) {
+      setAlertMessage({ type: 'error', text: checkOutCheck.reason || 'Tidak dapat absen pulang.' });
+      return;
+    }
+
+    setPendingAction('PULANG');
+    if (preferredBiometric === 'WAJAH') {
+      setShowFaceModal(true);
+    } else {
+      setShowFingerprintModal(true);
+    }
+  };
+
+  // Callback when Face Scan is verified
+  const handleFaceVerified = (photoDataUrl: string) => {
+    setShowFaceModal(false);
+
+    if (pendingAction === 'MASUK') {
+      const res = storage.recordCheckIn(currentUser, {
+        shift: selectedShift,
+        keterangan: keterangan.trim() || undefined,
+        suhuTubuh: `${suhuTubuh}°C`,
+        metodeVerifikasi: 'WAJAH',
+        fotoWajah: photoDataUrl,
+        koordinatGPS: geofenceResult?.userCoords,
+        jarakKeKlinikMeter: geofenceResult?.distanceMeter,
+        statusLokasi: 'DALAM_KLINIK',
+      });
+
+      if (res.success) {
+        setAlertMessage({ type: 'success', text: res.message });
+        loadData();
+        if (onRefreshData) onRefreshData();
+      } else {
+        setAlertMessage({ type: 'error', text: res.message });
+      }
+    } else if (pendingAction === 'PULANG') {
+      const res = storage.recordCheckOut(currentUser.id, keterangan.trim() || undefined, {
+        metodeVerifikasi: 'WAJAH',
+        fotoWajah: photoDataUrl,
+        koordinatGPS: geofenceResult?.userCoords,
+        jarakKeKlinikMeter: geofenceResult?.distanceMeter,
+        statusLokasi: 'DALAM_KLINIK',
+      });
+
+      if (res.success) {
+        setAlertMessage({ type: 'success', text: res.message });
+        loadData();
+        if (onRefreshData) onRefreshData();
+      } else {
+        setAlertMessage({ type: 'error', text: res.message });
+      }
+    }
+
+    setPendingAction(null);
+  };
+
+  // Callback when Fingerprint is verified
+  const handleFingerprintVerified = () => {
+    setShowFingerprintModal(false);
+
+    if (pendingAction === 'MASUK') {
+      const res = storage.recordCheckIn(currentUser, {
+        shift: selectedShift,
+        keterangan: keterangan.trim() || undefined,
+        suhuTubuh: `${suhuTubuh}°C`,
+        metodeVerifikasi: 'SIDIK_JARI',
+        koordinatGPS: geofenceResult?.userCoords,
+        jarakKeKlinikMeter: geofenceResult?.distanceMeter,
+        statusLokasi: 'DALAM_KLINIK',
+      });
+
+      if (res.success) {
+        setAlertMessage({ type: 'success', text: res.message });
+        loadData();
+        if (onRefreshData) onRefreshData();
+      } else {
+        setAlertMessage({ type: 'error', text: res.message });
+      }
+    } else if (pendingAction === 'PULANG') {
+      const res = storage.recordCheckOut(currentUser.id, keterangan.trim() || undefined, {
+        metodeVerifikasi: 'SIDIK_JARI',
+        koordinatGPS: geofenceResult?.userCoords,
+        jarakKeKlinikMeter: geofenceResult?.distanceMeter,
+        statusLokasi: 'DALAM_KLINIK',
+      });
+
+      if (res.success) {
+        setAlertMessage({ type: 'success', text: res.message });
+        loadData();
+        if (onRefreshData) onRefreshData();
+      } else {
+        setAlertMessage({ type: 'error', text: res.message });
+      }
+    }
+
+    setPendingAction(null);
   };
 
   const handleAjukanIzinSakit = (e: React.FormEvent) => {
@@ -192,7 +316,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Hero Welcome & Profile Bar */}
+      {/* Hero Welcome & Profile Bar with Realtime Clock */}
       <div className="bg-gradient-to-br from-[#1B4332] via-[#245A44] to-[#12372A] rounded-3xl p-6 sm:p-8 text-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] relative overflow-hidden border border-emerald-800/40">
         <div className="absolute right-0 top-0 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -241,6 +365,11 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Geofencing Live Radar (Strict Clinic Perimeter Check) */}
+      <GeofenceStatusBadge
+        onLocationEvaluated={(result) => setGeofenceResult(result)}
+      />
 
       {/* Notifications / Alerts */}
       {alertMessage && (
@@ -293,10 +422,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               <button
                 onClick={() => setShowEditAttendanceModal(true)}
                 className="px-3.5 py-2 text-xs font-bold text-[#133E2B] bg-[#EDF6F3] hover:bg-[#E2EFEA] border border-emerald-900/15 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                title="Edit data presensi dan catatan tugas hari ini"
+                title="Koreksi data tugas hari ini"
               >
                 <Edit2 className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Edit Presensi & Tugas</span>
+                <span>Koreksi Data Tugas</span>
               </button>
             )}
 
@@ -323,7 +452,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             </p>
             <p className="text-[10px] text-slate-500 mt-0.5">
               {todayRecord?.jamMasuk && todayRecord.jamMasuk !== '-'
-                ? 'Tercatat di sistem'
+                ? `Metode: ${todayRecord.metodeVerifikasi || 'Biometrik'}`
                 : 'Belum absen'}
             </p>
           </div>
@@ -358,11 +487,24 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
 
           <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80">
             <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Suhu Tubuh / Lokasi
+              Verifikasi & Foto
             </p>
-            <p className="text-base font-bold text-slate-800 mt-1">
-              {todayRecord?.suhuTubuh || '36.5°C'}
-            </p>
+            {todayRecord?.fotoWajah ? (
+              <div className="flex items-center gap-2 mt-1">
+                <img
+                  src={todayRecord.fotoWajah}
+                  alt="Snapshot Wajah"
+                  className="w-8 h-8 rounded-full object-cover border border-emerald-500 shadow-2xs"
+                />
+                <span className="text-xs font-bold text-emerald-800">Scan Wajah Valid</span>
+              </div>
+            ) : (
+              <p className="text-base font-bold text-slate-800 mt-1">
+                {todayRecord?.metodeVerifikasi === 'SIDIK_JARI'
+                  ? 'Sidik Jari'
+                  : todayRecord?.suhuTubuh || '36.5°C'}
+              </p>
+            )}
             <p className="text-[10px] text-slate-500 truncate mt-0.5">
               {todayRecord?.lokasi || 'Klinik Sidogiri Induk'}
             </p>
@@ -370,19 +512,49 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         </div>
       </div>
 
-      {/* TWO BIG ATTENDANCE BUTTONS */}
+      {/* TWO BIG ATTENDANCE BUTTONS WITH BIOMETRIC SELECTOR */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-emerald-900/[0.07] shadow-xs space-y-6">
-        <div>
-          <h2 className="text-lg font-black text-[#112F20] uppercase tracking-tight flex items-center gap-2">
-            <Clock className="w-5 h-5 text-emerald-700" />
-            Tombol Presensi Kehadiran
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Tekan tombol di bawah untuk mencatat waktu kehadiran Anda secara akurat dan realtime.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-black text-[#112F20] uppercase tracking-tight flex items-center gap-2">
+              <Clock className="w-5 h-5 text-emerald-700" />
+              Tombol Presensi Kehadiran
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Tekan tombol di bawah untuk memverifikasi kehadiran via Biometrik Wajah atau Sidik Jari.
+            </p>
+          </div>
+
+          {/* Biometric Method Switcher */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setPreferredBiometric('WAJAH')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                preferredBiometric === 'WAJAH'
+                  ? 'bg-white text-emerald-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Scan className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Scan Wajah</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreferredBiometric('SIDIK_JARI')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                preferredBiometric === 'SIDIK_JARI'
+                  ? 'bg-white text-emerald-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Fingerprint className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Sidik Jari</span>
+            </button>
+          </div>
         </div>
 
-        {/* Input Parameters for Check-In (Shift, Suhu Tubuh, Keterangan) */}
+        {/* Shift, Temperature, and Notes Parameters */}
         {!todayRecord && (
           <div className="bg-[#F2F8F5] p-4 rounded-2xl border border-emerald-900/[0.06] grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
@@ -437,24 +609,28 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
           {/* 1. ABSEN MASUK BUTTON */}
           <div className="space-y-2">
             <button
-              onClick={handleAbsenMasuk}
-              disabled={!checkInCheck.can}
+              onClick={handleInitiateAbsenMasuk}
+              disabled={!checkInCheck.can || !isInsideClinic}
               className={`w-full py-6 px-6 rounded-2xl flex items-center justify-center gap-4 text-white font-extrabold text-lg sm:text-xl transition-all shadow-md cursor-pointer ${
-                checkInCheck.can
+                checkInCheck.can && isInsideClinic
                   ? 'bg-gradient-to-r from-[#1B4332] via-[#245A44] to-[#12372A] hover:from-[#153628] hover:to-[#0F291E] shadow-emerald-950/20 active:scale-[0.99]'
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none border border-slate-300/50'
               }`}
             >
               <div
                 className={`p-3 rounded-xl ${
-                  checkInCheck.can ? 'bg-white/15' : 'bg-slate-300'
+                  checkInCheck.can && isInsideClinic ? 'bg-white/15' : 'bg-slate-300'
                 }`}
               >
-                <LogIn className="w-8 h-8" />
+                {preferredBiometric === 'WAJAH' ? (
+                  <Scan className="w-8 h-8" />
+                ) : (
+                  <Fingerprint className="w-8 h-8" />
+                )}
               </div>
               <div className="text-left">
                 <span className="block text-xs uppercase tracking-wider font-semibold opacity-90">
-                  Presensi Masuk
+                  Presensi Masuk ({preferredBiometric === 'WAJAH' ? 'Scan Wajah' : 'Sidik Jari'})
                 </span>
                 <span className="block text-2xl font-black tracking-tight">
                   ABSEN MASUK
@@ -462,9 +638,18 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               </div>
             </button>
 
-            {!checkInCheck.can && (
+            {!isInsideClinic ? (
+              <p className="text-xs text-center text-rose-600 font-bold">
+                🚫 Tombol Terkunci: Anda berada di luar area Klinik Sidogiri.
+              </p>
+            ) : !checkInCheck.can ? (
               <p className="text-xs text-center text-slate-500 font-medium">
                 {checkInCheck.reason}
+              </p>
+            ) : (
+              <p className="text-xs text-center text-emerald-800 font-bold flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Terverifikasi di klinik • Siap absen masuk</span>
               </p>
             )}
           </div>
@@ -472,24 +657,28 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
           {/* 2. ABSEN PULANG BUTTON */}
           <div className="space-y-2">
             <button
-              onClick={handleAbsenPulang}
-              disabled={!checkOutCheck.can}
+              onClick={handleInitiateAbsenPulang}
+              disabled={!checkOutCheck.can || !isInsideClinic}
               className={`w-full py-6 px-6 rounded-2xl flex items-center justify-center gap-4 text-white font-extrabold text-lg sm:text-xl transition-all shadow-md cursor-pointer ${
-                checkOutCheck.can
+                checkOutCheck.can && isInsideClinic
                   ? 'bg-gradient-to-r from-[#1F4E5B] via-[#265B6A] to-[#133A44] hover:from-[#173F4B] hover:to-[#0E2C34] shadow-teal-950/20 active:scale-[0.99]'
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none border border-slate-300/50'
               }`}
             >
               <div
                 className={`p-3 rounded-xl ${
-                  checkOutCheck.can ? 'bg-white/15' : 'bg-slate-300'
+                  checkOutCheck.can && isInsideClinic ? 'bg-white/15' : 'bg-slate-300'
                 }`}
               >
-                <LogOut className="w-8 h-8" />
+                {preferredBiometric === 'WAJAH' ? (
+                  <Scan className="w-8 h-8" />
+                ) : (
+                  <Fingerprint className="w-8 h-8" />
+                )}
               </div>
               <div className="text-left">
                 <span className="block text-xs uppercase tracking-wider font-semibold opacity-90">
-                  Presensi Pulang
+                  Presensi Pulang ({preferredBiometric === 'WAJAH' ? 'Scan Wajah' : 'Sidik Jari'})
                 </span>
                 <span className="block text-2xl font-black tracking-tight">
                   ABSEN PULANG
@@ -497,9 +686,18 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               </div>
             </button>
 
-            {!checkOutCheck.can && (
+            {!isInsideClinic ? (
+              <p className="text-xs text-center text-rose-600 font-bold">
+                🚫 Tombol Terkunci: Anda berada di luar area Klinik Sidogiri.
+              </p>
+            ) : !checkOutCheck.can ? (
               <p className="text-xs text-center text-slate-500 font-medium">
                 {checkOutCheck.reason}
+              </p>
+            ) : (
+              <p className="text-xs text-center text-teal-800 font-bold flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
+                <span>Terverifikasi di klinik • Siap absen pulang</span>
               </p>
             )}
           </div>
@@ -551,9 +749,9 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             </div>
           ) : (
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
-              <p className="font-semibold">Tidak ada jadwal dinas spesifik terdaftar hari ini.</p>
+              <p className="font-semibold">Piket Setiap Hari Terjadwal (Klinik Pratama Sidogiri).</p>
               <p className="mt-0.5 text-slate-400">
-                Anda tetap dapat melakukan absensi jika sedang bertugas on-call atau penugasan khusus.
+                Anda dapat langsung melakukan absensi masuk shift dinas.
               </p>
             </div>
           )}
@@ -564,10 +762,10 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
           <div>
             <h4 className="font-bold text-[#112F20] text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-emerald-600" />
-              Tata Tertib Presensi
+              Tata Tertib Presensi Biometrik
             </h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Seluruh dokter dan paramedis wajib melakukan absensi tepat waktu sebelum pelayanan dimulai. Kedisiplinan adalah bagian dari khidmah mulia di Klinik Sidogiri.
+              Seluruh dokter dan paramedis wajib melakukan absensi saat tiba di lingkungan Klinik Sidogiri. Validasi wajah & sidik jari menjamin akurasi dan kedisiplinan khidmah kesehatan.
             </p>
           </div>
 
@@ -576,12 +774,35 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               onClick={onNavigateToHistory}
               className="mt-4 flex items-center justify-between w-full px-3.5 py-2.5 text-xs font-bold text-[#133E2B] bg-white rounded-xl border border-emerald-900/10 hover:bg-emerald-50/60 transition cursor-pointer shadow-2xs"
             >
-              <span>Lihat Riwayat Absensi Saya</span>
+              <span>Lihat Riwayat Presensi Saya</span>
               <ChevronRight className="w-4 h-4 text-emerald-700" />
             </button>
           )}
         </div>
       </div>
+
+      {/* Biometric Modals */}
+      <FaceScanModal
+        isOpen={showFaceModal}
+        onClose={() => {
+          setShowFaceModal(false);
+          setPendingAction(null);
+        }}
+        onVerified={handleFaceVerified}
+        staffName={currentUser.nama}
+        actionType={pendingAction || 'MASUK'}
+      />
+
+      <FingerprintModal
+        isOpen={showFingerprintModal}
+        onClose={() => {
+          setShowFingerprintModal(false);
+          setPendingAction(null);
+        }}
+        onVerified={handleFingerprintVerified}
+        staffName={currentUser.nama}
+        actionType={pendingAction || 'MASUK'}
+      />
 
       {/* Modal Pengajuan Izin / Sakit */}
       {showLeaveModal && (
@@ -599,43 +820,42 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Jenis Pengajuan
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setLeaveType('IZIN')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border text-center transition cursor-pointer ${
+                    className={`py-2 px-3 rounded-xl font-bold text-xs border transition cursor-pointer ${
                       leaveType === 'IZIN'
-                        ? 'bg-sky-700 text-white border-sky-700 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    IZIN
+                    Izin Dinas / Pribadi
                   </button>
                   <button
                     type="button"
                     onClick={() => setLeaveType('SAKIT')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs border text-center transition cursor-pointer ${
+                    className={`py-2 px-3 rounded-xl font-bold text-xs border transition cursor-pointer ${
                       leaveType === 'SAKIT'
-                        ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-rose-100 border-rose-300 text-rose-900 shadow-2xs'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    SAKIT
+                    Sakit (Surat Dokter)
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Keterangan / Alasan Lengkap
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Keterangan Alasan
                 </label>
                 <textarea
-                  rows={3}
                   value={leaveReason}
                   onChange={(e) => setLeaveReason(e.target.value)}
-                  placeholder="Contoh: Mengikuti simposium medis kedokteran / Sakit demam berobat ke dr..."
-                  className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
-                  required
+                  rows={3}
+                  placeholder="Tuliskan keterangan detail pengajuan..."
+                  className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600"
                 />
               </div>
 
@@ -643,15 +863,15 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowLeaveModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 rounded-xl cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold text-white bg-[#1B4332] hover:bg-[#245A44] rounded-xl transition shadow-xs cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#1B4332] hover:bg-[#245A44] rounded-xl cursor-pointer shadow-xs"
                 >
-                  Simpan Pengajuan
+                  Kirim Pengajuan
                 </button>
               </div>
             </form>
@@ -659,43 +879,53 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
         </div>
       )}
 
-      {/* Edit Today Attendance Modal */}
-      <EditAttendanceModal
-        isOpen={showEditAttendanceModal}
-        onClose={() => setShowEditAttendanceModal(false)}
-        record={todayRecord || null}
-        onSaved={() => {
-          loadData();
-          if (onRefreshData) onRefreshData();
-        }}
-      />
+      {/* Modal Edit My Attendance / Correction */}
+      {showEditAttendanceModal && todayRecord && (
+        <EditAttendanceModal
+          isOpen={showEditAttendanceModal}
+          onClose={() => setShowEditAttendanceModal(false)}
+          record={todayRecord}
+          onSaved={() => {
+            setShowEditAttendanceModal(false);
+            loadData();
+            if (onRefreshData) onRefreshData();
+            setAlertMessage({ type: 'success', text: 'Catatan presensi tugas hari ini berhasil dikoreksi!' });
+          }}
+        />
+      )}
 
-      {/* Edit My Today Schedule / Duty Modal */}
+      {/* Modal Edit Duty / Schedule for today */}
       {showEditScheduleModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-emerald-900/[0.08] animate-fadeIn max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-              <div>
-                <h3 className="text-lg font-black text-[#112F20] uppercase tracking-tight">
-                  Edit Rincian Tugas Dinas Saya
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Perbarui shift, jam tugas, ruangan, dan rincian pekerjaan dinas Anda hari ini.
-                </p>
-              </div>
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-emerald-900/[0.08] animate-fadeIn">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h3 className="text-base font-black text-[#112F20] uppercase tracking-tight flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-emerald-700" />
+                <span>Edit Tugas & Jam Dinas Hari Ini</span>
+              </h3>
               <button
+                type="button"
                 onClick={() => setShowEditScheduleModal(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveScheduleDuty} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveScheduleDuty} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nama Petugas & Bagian
+                </label>
+                <div className="p-2.5 rounded-xl bg-slate-50 text-xs font-semibold text-slate-700">
+                  {currentUser.nama} ({currentUser.bagian})
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Shift Dinas
+                    Shift
                   </label>
                   <select
                     value={scheduleFormData.shift || 'Pagi'}
@@ -705,7 +935,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                         shift: e.target.value as ShiftType,
                       })
                     }
-                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold"
                   >
                     <option value="Pagi">Shift Pagi</option>
                     <option value="Siang">Shift Siang</option>
@@ -716,19 +946,16 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Ruangan / Pos Pelayanan
+                    Ruangan / Poli
                   </label>
                   <input
                     type="text"
                     value={scheduleFormData.ruangan || ''}
                     onChange={(e) =>
-                      setScheduleFormData({
-                        ...scheduleFormData,
-                        ruangan: e.target.value,
-                      })
+                      setScheduleFormData({ ...scheduleFormData, ruangan: e.target.value })
                     }
-                    placeholder="Poli Umum A / IGD"
-                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
+                    placeholder="Contoh: Poli Gigi"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold"
                   />
                 </div>
               </div>
@@ -736,36 +963,30 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Jam Mulai
+                    Jam Mulai (WIB)
                   </label>
                   <input
                     type="time"
                     value={scheduleFormData.jamMulai || '07:00'}
                     onChange={(e) =>
-                      setScheduleFormData({
-                        ...scheduleFormData,
-                        jamMulai: e.target.value,
-                      })
+                      setScheduleFormData({ ...scheduleFormData, jamMulai: e.target.value })
                     }
-                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold"
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Jam Selesai
+                    Jam Selesai (WIB)
                   </label>
                   <input
                     type="time"
                     value={scheduleFormData.jamSelesai || '14:00'}
                     onChange={(e) =>
-                      setScheduleFormData({
-                        ...scheduleFormData,
-                        jamSelesai: e.target.value,
-                      })
+                      setScheduleFormData({ ...scheduleFormData, jamSelesai: e.target.value })
                     }
-                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold"
                     required
                   />
                 </div>
@@ -773,36 +994,32 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Deskripsi & Rincian Tugas Dinas *
+                  Keterangan / Rincian Tugas
                 </label>
-                <textarea
-                  rows={3}
+                <input
+                  type="text"
                   value={scheduleFormData.keterangan || ''}
                   onChange={(e) =>
-                    setScheduleFormData({
-                      ...scheduleFormData,
-                      keterangan: e.target.value,
-                    })
+                    setScheduleFormData({ ...scheduleFormData, keterangan: e.target.value })
                   }
-                  placeholder="Contoh: Pemeriksaan pasien poli umum, tindakan bedah minor, visite santri rawat inap"
-                  className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
-                  required
+                  placeholder="Contoh: Jaga Poli Umum & Layanan Resep"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowEditScheduleModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 rounded-xl cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold text-white bg-[#1B4332] hover:bg-[#245A44] rounded-xl transition shadow-xs cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#1B4332] hover:bg-[#245A44] rounded-xl cursor-pointer shadow-xs"
                 >
-                  Simpan Perubahan Tugas
+                  Simpan Jadwal Tugas
                 </button>
               </div>
             </form>

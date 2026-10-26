@@ -24,6 +24,8 @@ export type Department =
   | 'Layanan Ambulan 24 Jam'
   | 'Administrasi Medis';
 
+export type BiometricMethod = 'WAJAH' | 'SIDIK_JARI' | 'PIN_MANUAL';
+
 export interface User {
   id: string; // e.g., 'DOK-001'
   nama: string;
@@ -37,6 +39,8 @@ export interface User {
   foto?: string;
   sip?: string; // Surat Izin Praktik / STR
   bergabungSejak?: string;
+  fingerprintRegistered?: boolean;
+  faceRegistered?: boolean;
 }
 
 export interface AttendanceRecord {
@@ -55,6 +59,12 @@ export interface AttendanceRecord {
   lokasi?: string; // e.g. 'Klinik Sidogiri Induk'
   timestampMasuk?: number;
   timestampPulang?: number;
+  // Biometric & GPS Geofencing verification
+  metodeVerifikasi?: BiometricMethod;
+  fotoWajah?: string; // Data URL snapshot of verified face
+  koordinatGPS?: { latitude: number; longitude: number };
+  jarakKeKlinikMeter?: number;
+  statusLokasi?: 'DALAM_KLINIK' | 'LUAR_KLINIK';
 }
 
 export interface WorkSchedule {
@@ -79,4 +89,8 @@ export interface ClinicProfile {
   email: string;
   kepalaKlinik: string;
   jamOperasional: string;
+  // Geofencing Coordinates (Klinik Pratama Sidogiri)
+  latitude: number;
+  longitude: number;
+  radiusMeter: number;
 }

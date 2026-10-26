@@ -8,6 +8,9 @@ export const INITIAL_CLINIC_PROFILE: ClinicProfile = {
   email: 'klinik@sidogiri.net',
   kepalaKlinik: 'dr. Gatot Trisila',
   jamOperasional: 'Pelayanan Poli Rawat Jalan | UGD, Rawat Inap & Ambulan 24 Jam',
+  latitude: -7.669812,
+  longitude: 112.85964,
+  radiusMeter: 250,
 };
 
 /**
