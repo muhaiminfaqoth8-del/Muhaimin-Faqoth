@@ -14,7 +14,6 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
-  Info,
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -123,12 +122,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white p-6 rounded-3xl border border-emerald-100 shadow-sm">
-        <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
+      <div className="bg-white p-6 sm:p-7 rounded-3xl border border-emerald-900/[0.07] shadow-xs">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold uppercase tracking-wider border border-emerald-200/70">
           <Settings className="w-3.5 h-3.5 text-emerald-600" />
           <span>Konfigurasi & Keamanan</span>
         </div>
-        <h1 className="text-2xl font-black text-emerald-950 uppercase tracking-tight mt-1">
+        <h1 className="text-xl sm:text-2xl font-black text-[#112F20] uppercase tracking-tight mt-1">
           PENGATURAN SISTEM & PROFIL
         </h1>
         <p className="text-xs text-slate-500">
@@ -138,14 +137,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Notifications */}
       {successMsg && (
-        <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-xs animate-fadeIn">
+        <div className="p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-2xs animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-4 bg-rose-50 border border-rose-300 rounded-2xl text-rose-900 text-xs font-bold flex items-center gap-2 shadow-xs animate-fadeIn">
+        <div className="p-4 bg-rose-50/90 border border-rose-200 rounded-2xl text-rose-900 text-xs font-bold flex items-center gap-2 shadow-2xs animate-fadeIn">
           <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -153,11 +152,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 1. Keamanan Akun & Ganti PIN */}
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-sm space-y-4">
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-900/[0.07] shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <Lock className="w-5 h-5 text-emerald-700" />
+            <Lock className="w-4 h-4 text-emerald-700" />
             <div>
-              <h2 className="text-base font-extrabold text-emerald-950 uppercase tracking-tight">
+              <h2 className="text-base font-extrabold text-[#112F20] uppercase tracking-tight">
                 Keamanan & Ganti Password / PIN
               </h2>
               <p className="text-xs text-slate-500">
@@ -176,7 +175,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 value={oldPin}
                 onChange={(e) => setOldPin(e.target.value)}
                 placeholder="Masukkan PIN lama"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                 required
               />
             </div>
@@ -191,7 +190,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value)}
                   placeholder="PIN baru minimal 3 digit"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   required
                 />
               </div>
@@ -205,7 +204,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   value={confirmPin}
                   onChange={(e) => setConfirmPin(e.target.value)}
                   placeholder="Ulangi PIN baru"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   required
                 />
               </div>
@@ -215,7 +214,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowPin(!showPin)}
-                className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+                className="text-xs font-semibold text-emerald-800 hover:text-emerald-900 flex items-center gap-1 cursor-pointer"
               >
                 {showPin ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 <span>{showPin ? 'Sembunyikan Digit' : 'Lihat Digit'}</span>
@@ -223,7 +222,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <button
                 type="submit"
-                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition cursor-pointer"
+                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-[#1B4332] hover:bg-[#245A44] transition cursor-pointer shadow-xs"
               >
                 Simpan PIN Baru
               </button>
@@ -232,11 +231,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         {/* 2. Informasi Database & Pemeliharaan */}
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-sm space-y-4">
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-900/[0.07] shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <Database className="w-5 h-5 text-emerald-700" />
+            <Database className="w-4 h-4 text-emerald-700" />
             <div>
-              <h2 className="text-base font-extrabold text-emerald-950 uppercase tracking-tight">
+              <h2 className="text-base font-extrabold text-[#112F20] uppercase tracking-tight">
                 Penyimpanan Database & Backup
               </h2>
               <p className="text-xs text-slate-500">
@@ -245,7 +244,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 text-xs text-slate-700 space-y-2">
+          <div className="bg-[#F2F8F5] p-4 rounded-2xl border border-emerald-900/[0.06] text-xs text-slate-700 space-y-2">
             <div className="flex items-center gap-2 font-bold text-emerald-900">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Status Ketahanan Data: Aktif & Permanen</span>
@@ -258,13 +257,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="pt-2 flex flex-col sm:flex-row gap-2">
             <button
               onClick={handleExportBackup}
-              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-900 text-xs font-bold transition cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-emerald-900/15 bg-white hover:bg-emerald-50/60 text-[#133E2B] text-xs font-bold transition cursor-pointer shadow-2xs"
             >
               <Download className="w-3.5 h-3.5 text-emerald-700" />
               <span>Download Backup (JSON)</span>
             </button>
 
-            <label className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer">
+            <label className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer shadow-2xs">
               <Upload className="w-3.5 h-3.5 text-slate-600" />
               <span>Restore Backup</span>
               <input
@@ -280,7 +279,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="pt-3 border-t border-slate-100">
               <button
                 onClick={handleResetToDefault}
-                className="w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-rose-700 hover:bg-rose-50 border border-rose-200 text-xs font-bold transition cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-rose-700 hover:bg-rose-50/60 border border-rose-200 text-xs font-bold transition cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset ke Data Bawaan Default Klinik</span>
@@ -291,11 +290,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* 3. Profil Klinik Sidogiri (Admin Editable) */}
         {isAdmin && (
-          <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-sm space-y-4">
+          <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-emerald-900/[0.07] shadow-xs space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-              <Building2 className="w-5 h-5 text-emerald-700" />
+              <Building2 className="w-4 h-4 text-emerald-700" />
               <div>
-                <h2 className="text-base font-extrabold text-emerald-950 uppercase tracking-tight">
+                <h2 className="text-base font-extrabold text-[#112F20] uppercase tracking-tight">
                   Identitas & Profil Klinik Sidogiri
                 </h2>
                 <p className="text-xs text-slate-500">
@@ -314,7 +313,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     type="text"
                     value={profile.nama}
                     onChange={(e) => setProfile({ ...profile, nama: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   />
                 </div>
 
@@ -326,7 +325,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     type="text"
                     value={profile.tagline}
                     onChange={(e) => setProfile({ ...profile, tagline: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   />
                 </div>
               </div>
@@ -339,7 +338,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   type="text"
                   value={profile.alamat}
                   onChange={(e) => setProfile({ ...profile, alamat: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                 />
               </div>
 
@@ -352,7 +351,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     type="text"
                     value={profile.telepon}
                     onChange={(e) => setProfile({ ...profile, telepon: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   />
                 </div>
 
@@ -364,7 +363,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     type="email"
                     value={profile.email}
                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   />
                 </div>
 
@@ -376,7 +375,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     type="text"
                     value={profile.kepalaKlinik}
                     onChange={(e) => setProfile({ ...profile, kepalaKlinik: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   />
                 </div>
               </div>
@@ -384,7 +383,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-[#1B4332] hover:bg-[#245A44] transition cursor-pointer shadow-xs"
                 >
                   Simpan Perubahan Profil Klinik
                 </button>

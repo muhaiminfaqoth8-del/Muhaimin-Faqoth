@@ -17,52 +17,52 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     switch (st) {
       case 'HADIR':
         return {
-          bg: 'bg-emerald-50 text-emerald-700 border-emerald-300 ring-emerald-500/10',
+          bg: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
           icon: CheckCircle2,
           label: 'HADIR',
-          dot: 'bg-emerald-500',
+          iconColor: 'text-emerald-600',
         };
       case 'TERLAMBAT':
         return {
-          bg: 'bg-amber-50 text-amber-700 border-amber-300 ring-amber-500/10',
+          bg: 'bg-amber-50 text-amber-900 border-amber-200/80',
           icon: Clock,
           label: 'TERLAMBAT',
-          dot: 'bg-amber-500',
+          iconColor: 'text-amber-600',
         };
       case 'IZIN':
         return {
-          bg: 'bg-sky-50 text-sky-700 border-sky-300 ring-sky-500/10',
+          bg: 'bg-sky-50 text-sky-900 border-sky-200/80',
           icon: FileText,
           label: 'IZIN',
-          dot: 'bg-sky-500',
+          iconColor: 'text-sky-600',
         };
       case 'SAKIT':
         return {
-          bg: 'bg-purple-50 text-purple-700 border-purple-300 ring-purple-500/10',
+          bg: 'bg-purple-50 text-purple-900 border-purple-200/80',
           icon: HeartPulse,
           label: 'SAKIT',
-          dot: 'bg-purple-500',
+          iconColor: 'text-purple-600',
         };
       case 'ALPA':
         return {
-          bg: 'bg-rose-50 text-rose-700 border-rose-300 ring-rose-500/10',
+          bg: 'bg-rose-50 text-rose-900 border-rose-200/80',
           icon: XCircle,
           label: 'ALPA',
-          dot: 'bg-rose-500',
+          iconColor: 'text-rose-600',
         };
       case 'SUDAH PULANG':
         return {
-          bg: 'bg-teal-50 text-teal-800 border-teal-300 ring-teal-500/10',
+          bg: 'bg-teal-50 text-teal-900 border-teal-200/80',
           icon: LogOut,
           label: 'SUDAH PULANG',
-          dot: 'bg-teal-600',
+          iconColor: 'text-teal-600',
         };
       default:
         return {
-          bg: 'bg-slate-100 text-slate-700 border-slate-200 ring-slate-400/10',
+          bg: 'bg-slate-50 text-slate-700 border-slate-200',
           icon: Clock,
           label: st || 'BELUM ABSEN',
-          dot: 'bg-slate-400',
+          iconColor: 'text-slate-400',
         };
     }
   };
@@ -71,9 +71,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   const Icon = config.icon;
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5 gap-1 font-semibold',
+    sm: 'text-[11px] px-2 py-0.5 gap-1 font-semibold',
     md: 'text-xs px-2.5 py-1 gap-1.5 font-bold',
-    lg: 'text-sm px-3.5 py-1.5 gap-2 font-extrabold',
+    lg: 'text-xs sm:text-sm px-3 py-1.5 gap-2 font-bold',
   }[size];
 
   const iconSizes = {
@@ -84,10 +84,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border shadow-xs ring-1 transition-all ${config.bg} ${sizeClasses}`}
+      className={`inline-flex items-center rounded-xl border shadow-2xs transition-all ${config.bg} ${sizeClasses}`}
     >
-      {showIcon && <Icon className={`${iconSizes} shrink-0`} />}
-      <span>{config.label}</span>
+      {showIcon && <Icon className={`${iconSizes} ${config.iconColor} shrink-0`} />}
+      <span className="tracking-wide">{config.label}</span>
     </span>
   );
 };

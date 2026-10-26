@@ -2,7 +2,7 @@ import React from 'react';
 import { User } from '../types';
 import { Logo } from './Logo';
 import { DigitalClock } from './DigitalClock';
-import { LogOut, UserCheck, ShieldCheck, Stethoscope, Activity, UserCog } from 'lucide-react';
+import { LogOut, UserCheck, ShieldCheck, Stethoscope, Activity } from 'lucide-react';
 
 interface HeaderProps {
   currentUser: User | null;
@@ -21,25 +21,25 @@ export const Header: React.FC<HeaderProps> = ({
     switch (role) {
       case 'ADMIN':
         return {
-          bg: 'bg-emerald-950 text-emerald-300 border-emerald-800',
+          bg: 'bg-emerald-950 text-emerald-200 border-emerald-800',
           icon: ShieldCheck,
           label: 'ADMINISTRATOR',
         };
       case 'DOKTER':
         return {
-          bg: 'bg-teal-700 text-teal-100 border-teal-600',
+          bg: 'bg-teal-50 text-teal-800 border-teal-200',
           icon: Stethoscope,
           label: 'DOKTER',
         };
       case 'PARAMEDIS':
         return {
-          bg: 'bg-emerald-700 text-emerald-100 border-emerald-600',
+          bg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
           icon: Activity,
           label: 'PARAMEDIS',
         };
       default:
         return {
-          bg: 'bg-slate-700 text-slate-200 border-slate-600',
+          bg: 'bg-slate-50 text-slate-700 border-slate-200',
           icon: UserCheck,
           label: role,
         };
@@ -50,25 +50,25 @@ export const Header: React.FC<HeaderProps> = ({
   const RoleIcon = badge ? badge.icon : UserCheck;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-emerald-100 shadow-xs">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-emerald-900/[0.07] transition-all">
       {/* Top Banner with Sidogiri Identity */}
-      <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white px-4 py-1.5 text-xs">
+      <div className="bg-[#12372A] text-white px-4 py-1.5 text-xs">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 font-medium tracking-wide text-emerald-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div className="flex items-center gap-2 font-medium tracking-wide text-emerald-100">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
             <span>Sistem Informasi Presensi Elektronik Klinik Sidogiri</span>
-            <span className="hidden md:inline text-emerald-400/50">•</span>
-            <span className="hidden md:inline text-emerald-300">Pondok Pesantren Sidogiri, Pasuruan</span>
+            <span className="hidden md:inline text-emerald-400/40">•</span>
+            <span className="hidden md:inline text-emerald-200/80">Pondok Pesantren Sidogiri, Pasuruan</span>
           </div>
 
           {/* Quick Account Switcher Helper for seamless testing */}
           {currentUser && onSwitchUser && allUsers.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-emerald-300 hidden sm:inline">
-                Simulasi Login:
+              <span className="text-[11px] text-emerald-300/80 hidden sm:inline">
+                Simulasi Akun:
               </span>
               <select
-                className="bg-emerald-950/80 border border-emerald-700 text-emerald-100 text-xs rounded-md px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                className="bg-[#0c241b] border border-emerald-700/60 text-emerald-100 text-xs rounded-lg px-2.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-emerald-400 cursor-pointer"
                 value={currentUser.id}
                 onChange={(e) => {
                   const selected = allUsers.find((u) => u.id === e.target.value);
@@ -114,9 +114,9 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between gap-4">
           {/* Logo & Clinic Branding */}
           <div className="flex items-center gap-3">
-            <Logo size="md" textColor="text-emerald-950" />
-            <div className="hidden sm:block border-l border-emerald-200 pl-3">
-              <h1 className="text-sm font-extrabold text-emerald-950 uppercase tracking-tight">
+            <Logo size="md" textColor="text-[#133E2B]" />
+            <div className="hidden sm:block border-l border-emerald-900/10 pl-3">
+              <h1 className="text-xs sm:text-sm font-extrabold text-[#112F20] uppercase tracking-tight">
                 ABSENSI DOKTER & PARAMEDIS
               </h1>
               <p className="text-[11px] font-semibold text-emerald-700">
@@ -130,19 +130,19 @@ export const Header: React.FC<HeaderProps> = ({
             <DigitalClock variant="compact" className="hidden lg:flex" />
 
             {currentUser && (
-              <div className="flex items-center gap-3 pl-2 sm:border-l sm:border-emerald-200">
+              <div className="flex items-center gap-3 pl-2 sm:border-l sm:border-emerald-900/10">
                 <div className="text-right hidden sm:block">
                   <div className="flex items-center justify-end gap-1.5">
-                    <span className="font-bold text-sm text-slate-800 leading-tight">
+                    <span className="font-bold text-xs sm:text-sm text-slate-800 leading-tight">
                       {currentUser.nama}
                     </span>
                   </div>
                   <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                    <span className="text-xs text-slate-700">
+                    <span className="text-[11px] text-slate-500">
                       {currentUser.bagian}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full border ${badge?.bg}`}
+                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge?.bg}`}
                     >
                       <RoleIcon className="w-2.5 h-2.5" />
                       {badge?.label}
@@ -150,7 +150,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
 
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 text-white font-bold flex items-center justify-center shadow-xs border-2 border-white ring-2 ring-emerald-500/20 text-sm">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] text-white font-bold flex items-center justify-center shadow-xs border border-white text-xs">
                   {currentUser.nama
                     .split(' ')
                     .map((n) => n[0])
@@ -162,10 +162,10 @@ export const Header: React.FC<HeaderProps> = ({
 
                 <button
                   onClick={onLogout}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:text-rose-800 bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200/70 rounded-xl transition-colors cursor-pointer"
                   title="Keluar dari akun"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3.5 h-3.5" />
                   <span className="hidden md:inline">Keluar</span>
                 </button>
               </div>

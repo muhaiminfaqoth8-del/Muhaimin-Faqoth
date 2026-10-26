@@ -58,7 +58,7 @@ export default function App() {
   const isAdmin = currentUser.jabatan === 'ADMIN';
 
   return (
-    <div className="min-h-screen bg-slate-50/70 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="min-h-screen bg-[#F6FAF8] text-slate-800 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] selection:bg-emerald-100 selection:text-emerald-900">
       {/* Header with Sidogiri Logo, User info, Realtime clock & Quick switcher */}
       <Header
         currentUser={currentUser}

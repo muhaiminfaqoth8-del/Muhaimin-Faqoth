@@ -7,15 +7,11 @@ import {
   Search,
   Edit2,
   Trash2,
-  Power,
-  PowerOff,
   ShieldCheck,
   Stethoscope,
   Activity,
-  KeyRound,
   Eye,
   EyeOff,
-  Phone,
   AlertCircle,
   CheckCircle2,
   X,
@@ -129,45 +125,42 @@ export const StaffManagement: React.FC = () => {
     e.preventDefault();
     setModalError(null);
 
-    if (!formData.id?.trim()) {
-      setModalError('ID Petugas tidak boleh kosong.');
-      return;
-    }
-    if (!formData.nama?.trim()) {
-      setModalError('Nama Lengkap tidak boleh kosong.');
+    if (!formData.id?.trim() || !formData.nama?.trim()) {
+      setModalError('ID dan Nama petugas wajib diisi.');
       return;
     }
     if (!formData.username?.trim()) {
-      setModalError('Username tidak boleh kosong.');
+      setModalError('Username wajib diisi.');
       return;
     }
     if (!formData.password?.trim()) {
-      setModalError('Password/PIN tidak boleh kosong.');
+      setModalError('Password/PIN wajib diisi.');
       return;
     }
 
     const payload: User = {
       id: formData.id.trim(),
       nama: formData.nama.trim(),
-      jabatan: formData.jabatan as Role,
-      spesialisasi: formData.spesialisasi?.trim() || '',
+      jabatan: (formData.jabatan as Role) || 'DOKTER',
+      spesialisasi: formData.spesialisasi?.trim(),
       bagian: (formData.bagian as Department) || 'Poli Umum',
       noHp: formData.noHp?.trim() || '-',
       statusAktif: formData.statusAktif ?? true,
       username: formData.username.trim(),
       password: formData.password.trim(),
-      sip: formData.sip?.trim() || '',
+      sip: formData.sip?.trim(),
     };
 
-    let res;
-    if (isEditMode) {
-      res = storage.updateUser(payload);
-    } else {
-      res = storage.addUser(payload);
-    }
+    const res = isEditMode
+      ? storage.updateUser(payload)
+      : storage.addUser(payload);
 
     if (res.success) {
-      setActionSuccess(res.message);
+      setActionSuccess(
+        isEditMode
+          ? `Data ${payload.nama} berhasil diperbarui.`
+          : `Petugas baru ${payload.nama} berhasil didaftarkan.`
+      );
       setIsModalOpen(false);
       loadUsers();
       setTimeout(() => setActionSuccess(null), 3500);
@@ -176,16 +169,17 @@ export const StaffManagement: React.FC = () => {
     }
   };
 
-  // Filtered users
+  // Filter users
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
       u.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.bagian.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.noHp.includes(searchQuery);
+      u.noHp.includes(searchQuery) ||
+      u.bagian.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesRole = roleFilter === 'ALL' || u.jabatan === roleFilter;
+
     const matchesStatus =
       statusFilter === 'ALL' ||
       (statusFilter === 'AKTIF' && u.statusAktif) ||
@@ -196,14 +190,14 @@ export const StaffManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-emerald-100 shadow-sm">
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 sm:p-7 rounded-3xl border border-emerald-900/[0.07] shadow-xs">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold uppercase tracking-wider border border-emerald-200/70">
             <Users className="w-3.5 h-3.5 text-emerald-600" />
             <span>Master Data Petugas</span>
           </div>
-          <h1 className="text-2xl font-black text-emerald-950 uppercase tracking-tight mt-1">
+          <h1 className="text-xl sm:text-2xl font-black text-[#112F20] uppercase tracking-tight mt-1">
             DATA DOKTER & PARAMEDIS
           </h1>
           <p className="text-xs text-slate-500">
@@ -213,7 +207,7 @@ export const StaffManagement: React.FC = () => {
 
         <button
           onClick={handleOpenAddModal}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold text-xs shadow-md shadow-emerald-700/20 transition cursor-pointer"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-[#1B4332] hover:bg-[#245A44] text-white font-bold text-xs shadow-xs transition cursor-pointer"
         >
           <UserPlus className="w-4 h-4" />
           <span>TAMBAH PETUGAS BARU</span>
@@ -222,22 +216,22 @@ export const StaffManagement: React.FC = () => {
 
       {/* Notifications */}
       {actionSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-xs animate-fadeIn">
+        <div className="p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-2xs animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>{actionSuccess}</span>
         </div>
       )}
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-white p-4 rounded-2xl border border-emerald-900/[0.07] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Cari nama, ID, username, nomor HP..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full pl-9 pr-3 py-2 text-xs bg-[#F9FBFA] border border-emerald-900/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
           />
         </div>
 
@@ -246,7 +240,7 @@ export const StaffManagement: React.FC = () => {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as 'ALL' | Role)}
-            className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="text-xs font-semibold bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
           >
             <option value="ALL">Semua Jabatan</option>
             <option value="DOKTER">Dokter</option>
@@ -258,7 +252,7 @@ export const StaffManagement: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'AKTIF' | 'NONAKTIF')}
-            className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="text-xs font-semibold bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
           >
             <option value="ALL">Semua Status</option>
             <option value="AKTIF">Hanya Aktif</option>
@@ -268,10 +262,10 @@ export const StaffManagement: React.FC = () => {
       </div>
 
       {/* Main Table */}
-      <div className="bg-white rounded-3xl border border-emerald-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border border-emerald-900/[0.07] shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-emerald-50/70 border-b border-emerald-100 text-emerald-950 font-bold uppercase tracking-wider text-[11px]">
+            <thead className="bg-[#F2F8F5] border-b border-emerald-900/[0.06] text-[#133E2B] font-bold uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="py-3.5 px-4">ID & Nama Petugas</th>
                 <th className="py-3.5 px-4">Jabatan</th>
@@ -288,16 +282,16 @@ export const StaffManagement: React.FC = () => {
                 filteredUsers.map((u) => (
                   <tr
                     key={u.id}
-                    className={`hover:bg-emerald-50/30 transition-colors ${
+                    className={`hover:bg-[#F6FAF8] transition-colors ${
                       !u.statusAktif ? 'bg-slate-50/60 opacity-75' : ''
                     }`}
                   >
                     {/* ID & Nama */}
                     <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900 text-xs sm:text-sm">
+                      <div className="font-bold text-slate-800 text-xs sm:text-sm">
                         {u.nama}
                       </div>
-                      <div className="text-[10px] text-slate-700 font-mono">
+                      <div className="text-[10px] text-slate-500 font-mono">
                         {u.id} {u.sip && `• ${u.sip}`}
                       </div>
                     </td>
@@ -307,10 +301,10 @@ export const StaffManagement: React.FC = () => {
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           u.jabatan === 'ADMIN'
-                            ? 'bg-emerald-950 text-emerald-300'
+                            ? 'bg-emerald-950 text-emerald-200'
                             : u.jabatan === 'DOKTER'
-                            ? 'bg-teal-100 text-teal-800'
-                            : 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-teal-50 text-teal-800 border border-teal-200/80'
+                            : 'bg-emerald-50 text-emerald-800 border border-emerald-200/80'
                         }`}
                       >
                         {u.jabatan === 'ADMIN' && <ShieldCheck className="w-2.5 h-2.5" />}
@@ -351,10 +345,10 @@ export const StaffManagement: React.FC = () => {
                     <td className="py-3.5 px-4">
                       <button
                         onClick={() => handleToggleStatus(u.id, u.nama)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold cursor-pointer transition ${
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition ${
                           u.statusAktif
-                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                            : 'bg-rose-100 text-rose-800 hover:bg-rose-200'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100'
+                            : 'bg-rose-50 text-rose-800 border border-rose-200/80 hover:bg-rose-100'
                         }`}
                         title="Klik untuk mengubah status aktif"
                       >
@@ -377,7 +371,7 @@ export const StaffManagement: React.FC = () => {
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => handleOpenEditModal(u)}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition cursor-pointer"
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#1B4332] hover:bg-[#245A44] text-white font-bold text-xs shadow-2xs transition cursor-pointer"
                           title="Edit Data Petugas & Tugas"
                         >
                           <Edit2 className="w-3 h-3" />
@@ -386,7 +380,7 @@ export const StaffManagement: React.FC = () => {
 
                         <button
                           onClick={() => handleDeleteUser(u)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50/60 transition cursor-pointer"
                           title="Hapus Data Petugas"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -406,7 +400,7 @@ export const StaffManagement: React.FC = () => {
           </table>
         </div>
 
-        <div className="p-4 bg-slate-50/60 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <div className="p-4 bg-[#FAFDFB] border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <span>
             Total terdaftar: <b>{filteredUsers.length}</b> petugas
           </span>
@@ -418,11 +412,11 @@ export const StaffManagement: React.FC = () => {
 
       {/* Add / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-emerald-200 animate-fadeIn max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-emerald-900/[0.08] animate-fadeIn max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
               <div>
-                <h3 className="text-lg font-black text-emerald-950 uppercase tracking-tight">
+                <h3 className="text-lg font-black text-[#112F20] uppercase tracking-tight">
                   {isEditMode ? 'Edit Data Petugas' : 'Tambah Petugas Baru'}
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -438,8 +432,8 @@ export const StaffManagement: React.FC = () => {
             </div>
 
             {modalError && (
-              <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+              <div className="mb-4 p-3 bg-rose-50/90 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>{modalError}</span>
               </div>
             )}
@@ -456,7 +450,7 @@ export const StaffManagement: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                     disabled={isEditMode}
                     placeholder="DOK-005 / PRM-006"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30 disabled:opacity-60"
                     required
                   />
                 </div>
@@ -470,7 +464,7 @@ export const StaffManagement: React.FC = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, jabatan: e.target.value as Role })
                     }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   >
                     <option value="DOKTER">DOKTER</option>
                     <option value="PARAMEDIS">PARAMEDIS</option>
@@ -488,7 +482,7 @@ export const StaffManagement: React.FC = () => {
                   value={formData.nama}
                   onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                   placeholder="Contoh: dr. Ahmad Fauzi / Ns. Nur Kholis, S.Kep"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   required
                 />
               </div>
@@ -503,7 +497,7 @@ export const StaffManagement: React.FC = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, bagian: e.target.value as Department })
                     }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   >
                     {DEPARTMENT_LIST.map((dep) => (
                       <option key={dep} value={dep}>
@@ -524,7 +518,7 @@ export const StaffManagement: React.FC = () => {
                       setFormData({ ...formData, spesialisasi: e.target.value })
                     }
                     placeholder="Contoh: Spesialis Gigi / Perawat Anestesi"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   />
                 </div>
               </div>
@@ -539,7 +533,7 @@ export const StaffManagement: React.FC = () => {
                     value={formData.noHp}
                     onChange={(e) => setFormData({ ...formData, noHp: e.target.value })}
                     placeholder="0812-3456-7890"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   />
                 </div>
 
@@ -552,13 +546,13 @@ export const StaffManagement: React.FC = () => {
                     value={formData.sip}
                     onChange={(e) => setFormData({ ...formData, sip: e.target.value })}
                     placeholder="SIP.503/446/..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-[#F9FBFA] border border-emerald-900/15 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                   />
                 </div>
               </div>
 
               {/* Login Credentials Section */}
-              <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100 space-y-3">
+              <div className="p-4 bg-[#F2F8F5] rounded-2xl border border-emerald-900/[0.06] space-y-3">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-900">
                   Kredensial Akses Login Petugas
                 </p>
@@ -575,7 +569,7 @@ export const StaffManagement: React.FC = () => {
                         setFormData({ ...formData, username: e.target.value.toLowerCase() })
                       }
                       placeholder="username_petugas"
-                      className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full bg-white border border-emerald-900/15 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                       required
                     />
                   </div>
@@ -592,13 +586,13 @@ export const StaffManagement: React.FC = () => {
                           setFormData({ ...formData, password: e.target.value })
                         }
                         placeholder="Contoh: 1234 atau pin rahasia"
-                        className="w-full bg-white border border-emerald-200 rounded-xl pl-3 pr-9 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full bg-white border border-emerald-900/15 rounded-xl pl-3 pr-9 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600/30"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPasswordInModal(!showPasswordInModal)}
-                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
                         {showPasswordInModal ? (
                           <EyeOff className="w-3.5 h-3.5" />
@@ -620,7 +614,7 @@ export const StaffManagement: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, statusAktif: e.target.checked })
                   }
-                  className="w-4 h-4 accent-emerald-600 rounded"
+                  className="w-4 h-4 accent-emerald-700 rounded"
                 />
                 <label
                   htmlFor="statusAktif"
@@ -641,7 +635,7 @@ export const StaffManagement: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 rounded-xl shadow-md transition cursor-pointer"
+                  className="px-6 py-2.5 text-xs font-bold text-white bg-[#1B4332] hover:bg-[#245A44] rounded-xl shadow-xs transition cursor-pointer"
                 >
                   {isEditMode ? 'Simpan Perubahan' : 'Tambahkan Petugas'}
                 </button>

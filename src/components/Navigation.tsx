@@ -9,7 +9,6 @@ import {
   FileSpreadsheet,
   Settings,
   LogOut,
-  Stethoscope,
 } from 'lucide-react';
 
 export type TabType =
@@ -86,10 +85,10 @@ export const Navigation: React.FC<NavigationProps> = ({
   const visibleItems = navItems.filter((item) => !item.adminOnly || isAdmin);
 
   return (
-    <nav className="bg-white border-b border-emerald-100 shadow-xs">
+    <nav className="bg-white/80 backdrop-blur-sm border-b border-emerald-900/[0.06] shadow-2xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between overflow-x-auto scrollbar-none py-1">
-          <div className="flex items-center space-x-1 sm:space-x-2">
+        <div className="flex items-center justify-between overflow-x-auto scrollbar-none py-1.5">
+          <div className="flex items-center space-x-1 sm:space-x-1.5">
             {visibleItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -97,15 +96,15 @@ export const Navigation: React.FC<NavigationProps> = ({
                 <button
                   key={item.id}
                   onClick={() => onTabChange(item.id)}
-                  className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20'
-                      : 'text-slate-600 hover:text-emerald-800 hover:bg-emerald-50/70'
+                      ? 'bg-[#1B4332] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-[#133E2B] hover:bg-emerald-50/70'
                   }`}
                 >
                   <Icon
-                    className={`w-4 h-4 transition-transform ${
-                      isActive ? 'text-emerald-200 scale-110' : 'text-slate-400'
+                    className={`w-3.5 h-3.5 transition-transform ${
+                      isActive ? 'text-emerald-300' : 'text-slate-400'
                     }`}
                   />
                   <span>{item.label}</span>
@@ -114,10 +113,10 @@ export const Navigation: React.FC<NavigationProps> = ({
             })}
           </div>
 
-          <div className="hidden md:flex items-center pl-4 border-l border-emerald-100">
+          <div className="hidden md:flex items-center pl-4 border-l border-emerald-900/[0.08]">
             <button
               onClick={onLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-rose-700 rounded-lg hover:bg-rose-50/60 transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Keluar</span>

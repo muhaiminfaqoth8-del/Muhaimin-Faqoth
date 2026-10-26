@@ -4,12 +4,12 @@ import { Phone, MapPin, Mail, ShieldCheck } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="mt-auto bg-white border-t border-emerald-100 text-slate-600">
+    <footer className="mt-auto bg-white/70 border-t border-emerald-900/[0.06] text-slate-600">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           {/* Clinic Brand */}
           <div className="space-y-3">
-            <Logo size="md" textColor="text-emerald-950" />
+            <Logo size="md" textColor="text-[#133E2B]" />
             <p className="text-xs text-slate-500 leading-relaxed max-w-sm">
               Sistem Presensi & Kehadiran Digital Dokter dan Paramedis Klinik Sidogiri. Berkomitmen memberikan pelayanan kesehatan santri dan masyarakat yang profesional, amanah, dan terpercaya.
             </p>
@@ -21,7 +21,7 @@ export const Footer: React.FC = () => {
 
           {/* Contact & Location */}
           <div className="space-y-2 text-xs">
-            <h4 className="font-bold text-emerald-950 uppercase tracking-wider text-xs mb-3">
+            <h4 className="font-bold text-[#133E2B] uppercase tracking-wider text-xs mb-3">
               Kontak & Lokasi Klinik
             </h4>
             <div className="flex items-start gap-2 text-slate-600">
@@ -40,28 +40,28 @@ export const Footer: React.FC = () => {
 
           {/* Operational Hours */}
           <div className="space-y-2 text-xs">
-            <h4 className="font-bold text-emerald-950 uppercase tracking-wider text-xs mb-3">
+            <h4 className="font-bold text-[#133E2B] uppercase tracking-wider text-xs mb-3">
               Jadwal Pelayanan
             </h4>
-            <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200/60 space-y-1.5">
+            <div className="bg-[#F2F8F5] p-3.5 rounded-2xl border border-emerald-900/[0.06] space-y-2">
               <div className="flex justify-between font-medium">
-                <span className="text-slate-700">Pelayanan Poli Rawat Jalan:</span>
-                <span className="font-bold text-emerald-900">07:00 - 21:00 WIB</span>
+                <span className="text-slate-600">Pelayanan Rawat Jalan:</span>
+                <span className="font-bold text-[#133E2B]">07:00 - 21:00 WIB</span>
               </div>
               <div className="flex justify-between font-medium">
-                <span className="text-slate-700">IGD & Rawat Inap Santri:</span>
-                <span className="font-bold text-emerald-900">24 Jam Nonstop</span>
+                <span className="text-slate-600">IGD & Rawat Inap Santri:</span>
+                <span className="font-bold text-[#133E2B]">24 Jam Nonstop</span>
               </div>
               <div className="flex justify-between font-medium">
-                <span className="text-slate-700">Layanan Farmasi & Lab:</span>
-                <span className="font-bold text-emerald-900">24 Jam</span>
+                <span className="text-slate-600">Layanan Farmasi & Lab:</span>
+                <span className="font-bold text-[#133E2B]">24 Jam</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <p className="font-bold text-emerald-900">
+        <div className="mt-8 pt-6 border-t border-emerald-900/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <p className="font-semibold text-slate-700">
             © {new Date().getFullYear()} Klinik Sidogiri. Seluruh hak cipta dilindungi.
           </p>
           <div className="flex items-center gap-4 text-xs font-medium text-emerald-800">
