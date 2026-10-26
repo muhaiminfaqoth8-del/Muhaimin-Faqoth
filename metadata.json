@@ -1,0 +1,6 @@
+{
+  "name": "Absensi Dokter & Paramedis Klinik Sidogiri",
+  "description": "Sistem informasi presensi dan absensi kehadiran dokter dan paramedis Klinik Sidogiri berbasis web yang modern dan responsif.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
