@@ -22,25 +22,25 @@ export const Logo: React.FC<LogoProps> = ({
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Official Red Crescent Logo (Bulan Sabit Merah Klinik Sidogiri) */}
+      {/* Official Dark Green Crescent Logo (Bulan Sabit Hijau Tua Klinik Sidogiri) */}
       <div
         className={`relative shrink-0 ${dimensions.box} flex items-center justify-center transition-transform hover:scale-105`}
       >
         <img
-          src="/assets/logo_clean.png"
-          alt="Logo Klinik Sidogiri"
+          src="/assets/logo_hijau.png"
+          alt="Logo Klinik Sidogiri Hijau"
           className={`${dimensions.img} object-contain drop-shadow-xs`}
           onError={(e) => {
-            // Fallback to vector SVG if png fails to load
+            // Fallback to dark green vector SVG if png fails to load
             e.currentTarget.onerror = null;
-            e.currentTarget.src = '/assets/logo_sidogiri_merah.svg';
+            e.currentTarget.src = '/assets/logo_sidogiri_hijau.svg';
           }}
         />
 
         {/* Delicate active indicator */}
         <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600 ring-2 ring-white"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#1B4332] ring-2 ring-white"></span>
         </span>
       </div>
 
@@ -51,7 +51,7 @@ export const Logo: React.FC<LogoProps> = ({
               KLINIK SIDOGIRI
             </span>
           </div>
-          <span className={`text-rose-700 font-bold tracking-normal ${dimensions.textSub}`}>
+          <span className={`text-[#1B4332] font-bold tracking-normal ${dimensions.textSub}`}>
             Layanan Kesehatan Terpadu
           </span>
         </div>

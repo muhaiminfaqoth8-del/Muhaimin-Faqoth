@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Bulan Sabit Hijau Tua Klinik Sidogiri -->
+  <path d="M 155,22 C 100,-8 28,15 8,72 C -12,128 10,185 75,198 C 122,206 170,172 178,136 C 145,166 92,168 56,145 C 18,121 16,68 52,38 C 84,12 130,16 155,22 Z" fill="#133E2B" />
+  
+  <g transform="translate(42, 60)">
+    <text x="30" y="28" font-family="'Brush Script MT', 'Dancing Script', 'Caveat', 'Segoe Script', cursive" font-size="34" font-weight="bold" font-style="italic" fill="#111111" letter-spacing="0.5">Klinik</text>
+    <text x="24" y="58" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="28" font-weight="900" fill="#111111" letter-spacing="-0.5">sidogiri</text>
+  </g>
+</svg>

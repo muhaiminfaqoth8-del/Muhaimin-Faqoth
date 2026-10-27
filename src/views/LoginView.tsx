@@ -102,9 +102,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     <div className="min-h-screen bg-[#F6FAF7] flex flex-col justify-between py-6 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Decorative calm ambient aura */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-rose-200/20 rounded-full blur-3xl pointer-events-none -ml-32 -mb-32"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-200/25 rounded-full blur-3xl pointer-events-none -ml-32 -mb-32"></div>
 
-      {/* Top Bar with Realtime Clock & Red Crescent Logo */}
+      {/* Top Bar with Realtime Clock & Dark Green Crescent Logo */}
       <div className="max-w-5xl mx-auto w-full flex items-center justify-between z-10">
         <Logo size="md" textColor="text-[#133E2B]" />
         <DigitalClock variant="compact" />
@@ -113,9 +113,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       {/* Main Login Card */}
       <div className="max-w-xl w-full mx-auto my-auto py-6 z-10">
         <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-[0_16px_45px_-12px_rgba(19,62,43,0.15)] border border-emerald-900/[0.08] overflow-hidden">
-          {/* Card Header with Calm Sidogiri Pine Gradient & Crescent Red Accent */}
+          {/* Card Header with Calm Sidogiri Pine Gradient & Dark Green Crescent */}
           <div className="bg-gradient-to-br from-[#1B4332] via-[#245A44] to-[#12372A] p-6 text-white text-center relative">
-            <div className="inline-flex p-2.5 rounded-2xl bg-white/90 backdrop-blur-sm shadow-md mb-2">
+            <div className="inline-flex p-2.5 rounded-2xl bg-white/95 backdrop-blur-sm shadow-md mb-2">
               <Logo size="lg" showText={false} />
             </div>
             <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
